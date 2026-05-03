@@ -1,0 +1,37 @@
+# -*- coding: utf-8 -*-
+from django.db import migrations, models
+
+
+class Migration(migrations.Migration):
+
+    initial = True
+
+    dependencies = []
+
+    operations = [
+        migrations.CreateModel(
+            name="BizInfo",
+            fields=[
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("bk_biz_id", models.IntegerField(unique=True)),
+                ("bk_biz_name", models.CharField(max_length=50)),
+            ],
+        ),
+        migrations.CreateModel(
+            name="BackupRecord",
+            fields=[
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("bk_host_id", models.IntegerField(verbose_name="主机ID")),
+                ("bk_file_dir", models.CharField(max_length=1024, verbose_name="备份目录")),
+                ("bk_file_suffix", models.CharField(max_length=255, verbose_name="文件名后缀")),
+                ("bk_backup_name", models.CharField(max_length=1024, verbose_name="备份文件名")),
+                ("bk_file_create_time", models.CharField(max_length=30, verbose_name="备份时间")),
+                ("bk_file_operator", models.CharField(max_length=30, verbose_name="备份人")),
+                ("bk_job_link", models.CharField(max_length=100, verbose_name="JOB结果")),
+            ],
+            options={
+                "verbose_name": "备份记录",
+                "verbose_name_plural": "备份记录",
+            },
+        ),
+    ]

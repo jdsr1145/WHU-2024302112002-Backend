@@ -19,7 +19,7 @@ from django.shortcuts import render
 from blueking.component.shortcuts import get_client_by_request
 from home_application.constants import MAX_ATTEMPTS, JOB_RESULT_ATTEMPTS_INTERVAL, JOB_BK_BIZ_ID, BK_JOB_HOST, \
     WEB_SUCCESS_CODE, SEARCH_FILE_PLAN_ID, WAITING_CODE, SUCCESS_CODE, BACKUP_FILE_PLAN_ID
-from home_application.models import BackupRecord
+from home_application.models import BackupRecord, BizInfo
 
 
 # 开发框架中通过中间件默认是需要登录态的，如有不需要登录的，可添加装饰器login_exempt

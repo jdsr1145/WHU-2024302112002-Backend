@@ -224,16 +224,9 @@ def search_file(request):
         step_instance_list = client.jobv3.get_job_instance_status(**kwargs).get("data").get("step_instance_list")
         if step_instance_list[0].get("status") == WAITING_CODE:
             time.sleep(JOB_RESULT_ATTEMPTS_INTERVAL)
-        elif step_instance_list[0].get("status") != SUCCESS_CODE:
-            res_data = {
-                "result": False,
-                "code": WEB_SUCCESS_CODE,
-                "message": "search failed",
-            }
-            return JsonResponse(res_data)
-        elif step_instance_list[0].get("status") == SUCCESS_CODE:
-            break
-        attempts += 1
+            attempts += 1
+            continue
+        break
 
     step_instance_id = step_instance_list[0].get("step_instance_id")
 
@@ -247,12 +240,17 @@ def search_file(request):
             "bk_host_id": bk_host_id,
         }
 
-        response = client.jobv3.get_job_instance_ip_log(**data).get("data")
-        step_res = response.get("log_content")
-        json_step_res = json.loads(step_res)
-
-        json_step_res["bk_host_id"] = response.get("bk_host_id")
-        log_list.append(json_step_res)
+        try:
+            response = client.jobv3.get_job_instance_ip_log(**data).get("data") or {}
+            step_res = response.get("log_content")
+            if not step_res:
+                log_list.append({"bk_host_id": bk_host_id, "message": "主机Agent异常或脚本未输出"})
+                continue
+            json_step_res = json.loads(step_res)
+            json_step_res["bk_host_id"] = response.get("bk_host_id") or bk_host_id
+            log_list.append(json_step_res)
+        except (ValueError, TypeError):
+            log_list.append({"bk_host_id": bk_host_id, "message": "主机Agent异常或日志解析失败"})
 
     res_data = {
         "result": True,
@@ -309,19 +307,13 @@ def backup_file(request):
         step_instance_list = client.jobv3.get_job_instance_status(**kwargs).get("data").get("step_instance_list")
         if step_instance_list[0].get("status") == WAITING_CODE:
             time.sleep(JOB_RESULT_ATTEMPTS_INTERVAL)
-        elif step_instance_list[0].get("status") != SUCCESS_CODE:
-            res_data = {
-                "result": False,
-                "code": WEB_SUCCESS_CODE,
-                "message": "backup failed",
-            }
-            return JsonResponse(res_data)
-        elif step_instance_list[0].get("status") == SUCCESS_CODE:
-            break
-        attempts += 1
+            attempts += 1
+            continue
+        break
 
     step_instance_id = step_instance_list[0].get("step_instance_id")
 
+    failed_hosts = []
     for bk_host_id in host_id_list:
         data = {
             "bk_scope_type": "biz",
@@ -331,9 +323,16 @@ def backup_file(request):
             "bk_host_id": bk_host_id,
         }
 
-        response = client.jobv3.get_job_instance_ip_log(**data).get("data")
-        step_res = response.get("log_content")
-        json_step_res = json.loads(step_res)
+        try:
+            response = client.jobv3.get_job_instance_ip_log(**data).get("data") or {}
+            step_res = response.get("log_content")
+            if not step_res:
+                failed_hosts.append(bk_host_id)
+                continue
+            json_step_res = json.loads(step_res)
+        except (ValueError, TypeError):
+            failed_hosts.append(bk_host_id)
+            continue
 
         for step_res in json_step_res:
             step_res["bk_host_id"] = bk_host_id
@@ -351,6 +350,7 @@ def backup_file(request):
         "result": True,
         "data": "success",
         "code": WEB_SUCCESS_CODE,
+        "failed_hosts": failed_hosts,
     }
     return JsonResponse(res_data)
 

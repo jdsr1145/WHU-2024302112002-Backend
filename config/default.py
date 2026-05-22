@@ -76,9 +76,7 @@ MIDDLEWARE += ("core.middleware.RecordUserBehaviorMiddleware",)
 CORS_ALLOW_CREDENTIALS = True
 
 # CORS白名单，需要配置环境变量，线上需要在开发者中心->应用开发->应用引擎->环境配置中添加环境变量
-CORS_ALLOWED_ORIGINS = [
-    os.getenv('CORS_ALLOWED_ORIGIN'),     # 允许跨域的域名
-]
+CORS_ALLOWED_ORIGINS = [o for o in [os.getenv('CORS_ALLOWED_ORIGIN')] if o]
 
 # 默认数据库AUTO字段类型
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
